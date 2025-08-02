@@ -1,36 +1,27 @@
 import discord
-import ezcord
-import os
+from discord.ext import commands
 import asyncio
-from dotenv import load_dotenv
+import os
 
-# Intents festlegen
-intents = discord.Intents.default()
-intents.members = True
-intents.message_content = True
-intents.guilds = True
+intents = discord.Intents.all()
+bot = commands.Bot(command_prefix="!", intents=intents)
 
-# Bot-Instanz erstellen
-bot = ezcord.Bot(intents=intents)
-
-# Lade Umgebungsvariablen
-load_dotenv()
+async def load_importcogs():
+    for filename in os.listdir("./cogs"):
+        if filename.endswith(".py") and not filename.startswith("_"):
+            try:
+                await bot.load_extension(f"cogs.{filename[:-3]}")
+                print(f"✅ Geladen: {filename}")
+            except Exception as e:
+                print(f"❌ Fehler beim Laden von {filename}: {e}")
 
 @bot.event
 async def on_ready():
-    print(f"Bot ist online als {bot.user}")
-
-    # Benutzerdefinierter Status
-    custom_status = discord.Game("ROONIÎž")  # Dein Status hier
-    await bot.change_presence(status=discord.Status.online, activity=custom_status)
+    print(f"Bot ist online als {bot.user}!")
 
 async def main():
-    try:
-        await bot.load_extension("cogs.send_cog")  # Passe ggf. den Pfad zum Cog an
-    except Exception as e:
-        print(f"Fehler beim Laden der Cogs: {e}")
+    async with bot:
+        await load_cogs()
+        await bot.start("TOKEN_HERE")  # Ersetze 
 
-    await bot.start(os.getenv('DISCORD_TOKEN'))
-
-if __name__ == "__main__":
-    asyncio.run(main())
+asyncio.run(main())
