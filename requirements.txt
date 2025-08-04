@@ -1,2 +1,2 @@
-py-cord==2.5.0
-python-dotenv>=1.0.0
+git+https://github.com/NeloBlivion/pycord@components-v2
+aiohttp>=3.8.4
