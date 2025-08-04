@@ -1,0 +1,3 @@
+# Discord Bot Token
+# Ersetze "DEIN_BOT_TOKEN_HIER" mit deinem echten Discord Bot Token
+DISCORD_TOKEN=DEIN_BOT_TOKEN_HIER 

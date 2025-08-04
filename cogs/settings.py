@@ -70,7 +70,7 @@ class WelcomeChannelView(discord.ui.View):
 
         self.add_item(WelcomeChannelSelect(guild))
 
-# --- Auswahl für Verify-Channel ---
+# --- Auswahl für Verify-System (Kanal und Rolle) ---
 
 class VerifyChannelSelect(discord.ui.Select):
 
@@ -94,23 +94,16 @@ class VerifyChannelSelect(discord.ui.Select):
 
             return await interaction.response.send_message("❌ Kein gültiger Kanal.", ephemeral=True)
 
+        # Speichere Kanal und zeige Rollenauswahl
         settings = load_settings()
-
         settings.setdefault(str(interaction.guild.id), {})["verify_channel_id"] = selected_id
-
         save_settings(settings)
-
-        await interaction.response.send_message(f"✅ Verifizierungskanal ist nun <#{selected_id}>.", ephemeral=True)
-
-class VerifyChannelView(discord.ui.View):
-
-    def __init__(self, guild):
-
-        super().__init__(timeout=180)
-
-        self.add_item(VerifyChannelSelect(guild))
-
-# --- Auswahl für Verify-Rolle (Seite 1 & 2) ---
+        
+        # Zeige Rollenauswahl
+        await interaction.response.edit_message(
+            content="✅ Verifizierungskanal gesetzt! Wähle jetzt die Verifizierungsrolle:",
+            view=VerifyRoleView(interaction.guild)
+        )
 
 class VerifyRoleSelect(discord.ui.Select):
 
@@ -153,8 +146,17 @@ class VerifyRoleSelect(discord.ui.Select):
         settings.setdefault(str(interaction.guild.id), {})["verify_role_id"] = selected_id
 
         save_settings(settings)
-
-        await interaction.response.send_message(f"✅ Verifizierungsrolle gesetzt: <@&{selected_id}>", ephemeral=True)
+        
+        # Hole den gespeicherten Kanal
+        guild_settings = settings.get(str(interaction.guild.id), {})
+        channel_id = guild_settings.get("verify_channel_id")
+        
+        await interaction.response.edit_message(
+            content=f"✅ Verify-System konfiguriert!\n"
+                   f"📺 Kanal: <#{channel_id}>\n"
+                   f"🎭 Rolle: <@&{selected_id}>",
+            view=None
+        )
 
 class VerifyRoleView(discord.ui.View):
 
@@ -167,6 +169,14 @@ class VerifyRoleView(discord.ui.View):
         if len(guild.roles) > 25:
 
             self.add_item(VerifyRoleSelect(guild, page=1))
+
+class VerifyChannelView(discord.ui.View):
+
+    def __init__(self, guild):
+
+        super().__init__(timeout=180)
+
+        self.add_item(VerifyChannelSelect(guild))
 
 # --- Button View für alles ---
 
@@ -192,27 +202,15 @@ class SettingsButtonView(discord.ui.View):
 
         )
 
-    @discord.ui.button(label="Verifizierungsrolle", style=discord.ButtonStyle.success, emoji="✅")
+    @discord.ui.button(label="Verify-System", style=discord.ButtonStyle.success, emoji="✅")
 
     async def verify_button(self, button, interaction):
 
         await interaction.response.send_message(
 
-            "Wähle die Rolle für verifizierte Nutzer:",
+            "Konfiguriere das Verify-System:\n"
 
-            view=VerifyRoleView(interaction.guild),
-
-            ephemeral=True
-
-        )
-
-    @discord.ui.button(label="Verifizierungskanal", style=discord.ButtonStyle.secondary, emoji="🛡️")
-
-    async def verify_channel_button(self, button, interaction):
-
-        await interaction.response.send_message(
-
-            "Wähle den Kanal, in dem der `/verify` Button angezeigt werden soll:",
+            "1️⃣ Wähle zuerst den Verifizierungskanal:",
 
             view=VerifyChannelView(interaction.guild),
 
